@@ -6,13 +6,17 @@ import threading
 from datetime import datetime
 import atexit
 
-# Get the IP address of the device
+
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    ip = s.getsockname()[0]
-    s.close()
-    return ip
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        s.close()
+        return "192.168.1.1"
 
 
 def get_ip_subnet(ip):
