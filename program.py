@@ -1,9 +1,7 @@
 import socket
 import json
 import os
-import subprocess
 import time
-import re
 import threading
 from datetime import datetime
 import atexit
@@ -32,11 +30,13 @@ def render_online_users(online_users):
 def send_json(ip, message):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.5)
             s.connect((ip, 40000))
             s.send(json.dumps(message).encode())
             s.close()
+            return True
     except:
-        pass    
+        return False    
 
 username = input("Enter your name: ")
 while username.strip() == "" or len(username) >= 32:
@@ -53,7 +53,7 @@ atexit.register(close_server)
 
 my_ip = get_ip()
 ip_subnet = get_ip_subnet(my_ip)
-discoverJson = json.dumps({"type": "DISCOVER_REQ", "sender_ip": my_ip, "sender_name": username}) + "\n"
+discoverJson = json.dumps({"type": "DISCOVER_REQ", "sender_ip": my_ip, "sender_name": username})
 
 online_users = [] 
 renderState = 1
@@ -68,13 +68,14 @@ def serverThread():
         client.close()
         if output:
             try:
+                client_ip = address[0]
                 message = output.strip()
                 message = json.loads(message)
                 message_type = message["type"]
                 if (message_type == "DISCOVER_REQ"):
                     with thread_lock:
-                        online_users.append({"ip": address, "name": message["sender_name"], "unread_messages": 0, "messages": []})
-                        send_json(sender_ip, {"type": "DISCOVER_RESP", "responder_ip": my_ip, "responder_name": username})
+                        online_users.append({"ip": client_ip, "name": message["sender_name"], "unread_messages": 0, "messages": []})
+                        send_json(client_ip, {"type": "DISCOVER_RESP", "responder_ip": my_ip, "responder_name": username})
                         if renderState == 0:
                             renderState = 1
                 elif (message_type == "MESSAGE"):
@@ -83,7 +84,7 @@ def serverThread():
 
                     with thread_lock:
                         for user in online_users:
-                            if user["ip"] == address:
+                            if user["ip"] == client_ip:
                                 user["messages"].append({"sender": sender_name, "message": payload, "timestamp": message["timestamp"]})
                                 if renderState != 2 and renderState != 3:
                                     user["unread_messages"] += 1
@@ -92,10 +93,9 @@ def serverThread():
                                     renderState = 3 
                                 break         
                 elif (message_type == "DISCOVER_RESP"):
-                    sender_ip = message["responder_ip"]
                     sender_name = message["responder_name"]
                     with thread_lock:
-                        online_users.append({"ip": sender_ip, "name": sender_name, "unread_messages": 0, "messages": []})
+                        online_users.append({"ip": client_ip, "name": sender_name, "unread_messages": 0, "messages": []})
                         if renderState == 0:
                             renderState = 1
             except:
@@ -107,13 +107,17 @@ serverThread.start()
 print("Discovering users in the network, this might take a while...")
 def discover_users(ip_start, ip_end):
     for i in range(ip_start, ip_end):
-        current_discover = ip_subnet + "." + str(i)
-        if current_discover == my_ip:
-            continue
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((current_discover, 40000))
-            s.send(discoverJson.encode())
-            s.close()
+        try:
+            current_discover = ip_subnet + "." + str(i)
+            if current_discover == my_ip:
+                continue
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(0.5)
+                s.connect((current_discover, 40000))
+                s.send(discoverJson.encode())
+                s.close()
+        except:
+            pass     
 
 #Discover users in parallel
 threads = []
@@ -183,9 +187,12 @@ def inputThread():
                 if message == "Q":
                     renderState = 1
                 else:
-                    online_users[active_user]["messages"].append({"sender": username, "message": message, "timestamp": int(time.time())})
-                    send_json(online_users[active_user], {"type": "MESSAGE", "sender_name": username, "payload": message, "timestamp": int(time.time())})
-                    renderState = 3
+                    res = send_json(online_users[active_user]["ip"], {"type": "MESSAGE", "sender_name": username, "payload": message, "timestamp": int(time.time())})
+                    if res:
+                        online_users[active_user]["messages"].append({"sender": username, "message": message, "timestamp": int(time.time())})
+                        renderState = 3
+                    else:
+                        print("Failed to send message")    
         time.sleep(0.5)        
 
 
