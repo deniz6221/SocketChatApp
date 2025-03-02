@@ -2,7 +2,7 @@ This program was created to work with both Windows and Linux operating systems.
 I tested the program with Windows 11 and Ubuntu 20.04, they both work as expected.
 The program works with python 3.8.10+
 
-I created a virtual enviroment for the application but its not usefull since I didn't use any external libraries.
+I created a virtual enviroment for the application but its not useful since I didn't use any external libraries.
 To run the application use the following command on ubuntu: 
 python3 program.py
 
