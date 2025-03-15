@@ -60,10 +60,10 @@ active_user = -1
 thread_lock = threading.Lock()
 
 
-def close_broadcast_server():
+def close_servers():
     broadcast_server.close()
-
-atexit.register(close_broadcast_server)
+    server.close()
+atexit.register(close_servers)
 
 
 def serverThread():
@@ -90,8 +90,10 @@ def serverThread():
                                 if renderState != 2 and renderState != 3:
                                     user["unread_messages"] += 1
                                     renderState = 1
+                                elif active_user != -1 and online_users[active_user]["ip"] == client_ip:
+                                    renderState = 3    
                                 else:    
-                                    renderState = 3 
+                                    user["unread_messages"] += 1    
                                 break         
                 elif (message_type == "DISCOVER_RESP"):
                     sender_name = message["responder_name"]
@@ -208,16 +210,16 @@ def inputThread():
 
 
 
-inputThread = threading.Thread(target=inputThread)
-inputThread.daemon = True
-inputThread.start()
+input_Thread = threading.Thread(target=inputThread)
+input_Thread.daemon = True
+input_Thread.start()
 
 time.sleep(1)
 os.system('cls' if os.name == 'nt' else 'clear')
 
-renderThread = threading.Thread(target=renderThread)
-renderThread.daemon = True
-renderThread.start()
+render_Thread = threading.Thread(target=renderThread)
+render_Thread.daemon = True
+render_Thread.start()
 
-inputThread.join()
+input_Thread.join()
 
