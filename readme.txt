@@ -9,3 +9,5 @@ python3 program.py
 After entering your name the application will discover any other computers running the same app within your network.
 Upon discovery, the online users will be listed. You can choose a user by their index and send messages to them.
 Each message recieve, message send and user discovery will cause re renders. This makes the app display everything almost in real time.
+
+program_udp_broadcast.py is the better and optimized application.
