@@ -11,3 +11,5 @@ Upon discovery, the online users will be listed. You can choose a user by their 
 Each message recieve, message send and user discovery will cause re renders. This makes the app display everything almost in real time.
 
 program_udp_broadcast.py is the better and optimized application.
+
+This repository is now obsolete since and a better encrypted chat application can be found here.
