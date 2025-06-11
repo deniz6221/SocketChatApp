@@ -12,4 +12,4 @@ Each message recieve, message send and user discovery will cause re renders. Thi
 
 program_udp_broadcast.py is the better and optimized application.
 
-This repository is now obsolete since and a better encrypted chat application can be found [here](https://github.com/deniz6221/Secure-Socket-Chat).
+This repository is now obsolete since a better encrypted chat application can be found [here](https://github.com/deniz6221/Secure-Socket-Chat).
